@@ -4,27 +4,38 @@ using HotelBookingDomain;
 using HotelBookingData;
 using Moq;
 using Xunit;
+using System.Collections.Generic;
 
 namespace HotelBookingTests
 {
-    public class HotelBookingManagerUnitTests: IDisposable
+    public class HotelBookingManagerUnitTests : IDisposable
     {
         private Mock<IHotelBookingRepository> _mockRepository;
         public HotelBookingManagerUnitTests()
         {
             // Use the constructor to set up test context for each test to avoid repeated code
             _mockRepository = new Mock<IHotelBookingRepository>();
-            
+            SetupGetBookingMethod();
+            SetupGetAvailableRoomsMethod();
+            SetupCreateBookingMethod();
+        }
+
+        public void Dispose()
+        {
+            _mockRepository.Object.Dispose();
+        }
+        private void SetupGetBookingMethod()
+        {
             // Set up mock data for returned booking
             var roomToBeBooked = 201;
             var dateOfBooking = DateTime.Now.NextDayOfWeek(DayOfWeek.Saturday);
-            
+
             // Let's say that room 201 is always booked on Saturdays
             // Under all other conditions, the GetBooking method will return null (signifying no booking record)
             _mockRepository.Setup(repo => repo.GetBooking(
-                It.Is<int>(i=>i==roomToBeBooked),
+                It.Is<int>(i => i == roomToBeBooked),
                 It.Is<DateTime>(date => date.DayOfWeek == DayOfWeek.Saturday)))
-                .Returns(()=>
+                .Returns(() =>
                     {
                         var mockHotelBooking = new Mock<IHotelBooking>();
                         mockHotelBooking.Setup(b => b.Surname).Returns("Smith");
@@ -33,13 +44,28 @@ namespace HotelBookingTests
                         return mockHotelBooking.Object;
                     }
                 );
-            
+        }
+        private void SetupGetAvailableRoomsMethod()
+        {
+            var mondayRooms = new List<int> { 101, 102, 201, 202, 300 };
+            var tuesdayRooms = new List<int> { 101, 102, 201, 202 };
+            var wednesdayRooms = new List<int> { 101, 102, 201 };
+            var thursdayRooms = new List<int> { 101, 102 };
+            var fridayRooms = new List<int> { 101 };
+            _mockRepository.Setup(repo => repo.GetAvailableRooms(It.Is<DateTime>(date => date.DayOfWeek == DayOfWeek.Monday))).Returns(mondayRooms);
+            _mockRepository.Setup(repo => repo.GetAvailableRooms(It.Is<DateTime>(date => date.DayOfWeek == DayOfWeek.Tuesday))).Returns(tuesdayRooms);
+            _mockRepository.Setup(repo => repo.GetAvailableRooms(It.Is<DateTime>(date => date.DayOfWeek == DayOfWeek.Wednesday))).Returns(wednesdayRooms);
+            _mockRepository.Setup(repo => repo.GetAvailableRooms(It.Is<DateTime>(date => date.DayOfWeek == DayOfWeek.Thursday))).Returns(thursdayRooms);
+            _mockRepository.Setup(repo => repo.GetAvailableRooms(It.Is<DateTime>(date => date.DayOfWeek == DayOfWeek.Friday))).Returns(fridayRooms);
+        }
+        private void SetupCreateBookingMethod()
+        {
             // The mock repository should return an successful result when there's no existing booking (Sundays are quiet days)
             _mockRepository.Setup(repo => repo.CreateBooking(
                 It.IsAny<string>(),
                 It.IsAny<int>(),
                 It.Is<DateTime>(date => date.DayOfWeek == DayOfWeek.Sunday)))
-                .Returns(()=>
+                .Returns(() =>
                     {
                         var bookingResult = new Mock<IHotelBookingResult>();
                         bookingResult.Setup(r => r.OperationSuccessful).Returns(true);
@@ -51,9 +77,9 @@ namespace HotelBookingTests
             // The mock repository should return an unsuccessful result when trying to double-book (Saturdays are busy)
             _mockRepository.Setup(repo => repo.CreateBooking(
                 It.IsAny<string>(),
-                It.Is<int>(i=>i==roomToBeBooked),
+                It.IsAny<int>(),
                 It.Is<DateTime>(date => date.DayOfWeek == DayOfWeek.Saturday)))
-                .Returns(()=>
+                .Returns(() =>
                     {
                         var bookingResult = new Mock<IHotelBookingResult>();
                         bookingResult.Setup(r => r.OperationSuccessful).Returns(false);
@@ -63,21 +89,16 @@ namespace HotelBookingTests
                 );
         }
 
-        public void Dispose()
-        {
-            _mockRepository.Object.Dispose();
-        }
-
         [Fact]
         public void WhenRoomBookingExists_VerifyIsUnavailable()
         {
             // Mock data layer is configured to have a booking in room 201 on Saturdays
             var roomToBeBooked = 201;
             var dateOfBooking = DateTime.Now.NextDayOfWeek(DayOfWeek.Saturday);
-            
+
             // Instantiate code under test using mock repo
             var bookingManager = new BookingManager(_mockRepository.Object);
-            
+
             Assert.False(bookingManager.IsRoomAvailable(roomToBeBooked, dateOfBooking));
         }
 
@@ -100,7 +121,7 @@ namespace HotelBookingTests
             // Mock data layer is configured to have a booking in room 201 on Saturdays
             var nameToBook = "Smith";
             var roomToBeBooked = 201;
-            var dateOfBooking =  DateTime.Now.NextDayOfWeek(DayOfWeek.Saturday);
+            var dateOfBooking = DateTime.Now.NextDayOfWeek(DayOfWeek.Saturday);
 
             // Instantiate code under test using mock repo
             var bookingManager = new BookingManager(_mockRepository.Object);
@@ -128,12 +149,13 @@ namespace HotelBookingTests
         [InlineData(DayOfWeek.Wednesday, 3)]
         [InlineData(DayOfWeek.Thursday, 2)]
         [InlineData(DayOfWeek.Friday, 1)]
-        public void WhenNoRoomBookingExists_AvailabilityCheckReturnsCorrectRooms(DayOfWeek dayToCheckAvailability, int targetNumberOfRoomsAvailable)
+        public void WhenRoomsAreAvailable_AvailabilityCheckReturnsCorrectRooms(DayOfWeek dayToCheckAvailability, int targetNumberOfRoomsAvailable)
         {
-            // Instantiate code under test using mock repo
+            // Instantiate code under test using mock data repo. 
+            // There are 5 rooms and the number of rooms available goes down by 1 each weekday 
             var bookingManager = new BookingManager(_mockRepository.Object);
             var actualRoomsAvailable = bookingManager.getAvailableRooms(DateTime.Now.NextDayOfWeek(dayToCheckAvailability));
-            
+
             Assert.Equal(actualRoomsAvailable.Count(), targetNumberOfRoomsAvailable);
         }
     }

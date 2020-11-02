@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using HotelBookingData;
 
 namespace HotelBookingDomain
@@ -31,7 +32,11 @@ namespace HotelBookingDomain
 
         public IEnumerable<int> getAvailableRooms(DateTime date)
         {
-            throw new NotImplementedException();
+            return _bookingData.GetAvailableRooms(date);
+            // if(bookings == null || bookings.Count() == 0)
+            //     return null;
+            
+            // return bookings.Select(x => x.RoomNumber).ToList();
         }
     }
 }

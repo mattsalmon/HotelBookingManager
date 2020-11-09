@@ -23,20 +23,19 @@ namespace HotelBookingDomain
             return false;
         }
         
-        public void AddBooking(string surname, int roomNumber, DateTime date)
+        public void AddBooking(string surname, int roomNumber, DateTime bookingDate)
         {
-            var bookingResult = _bookingData.CreateBooking(surname, roomNumber, date);
+            if(!IsRoomAvailable(roomNumber, bookingDate))
+                throw new RoomNotAvailableException($"Room number '{roomNumber}' could not be booked on '{bookingDate.ToShortDateString()}'. The room is already booked on this date.");
+            
+            var bookingResult = _bookingData.CreateBooking(surname, roomNumber, bookingDate);
             if(!bookingResult.OperationSuccessful)
-                throw new RoomNotAvailableException($"Room number '{roomNumber}' could not be booked on '{date.ToShortDateString()}'. Reason code given was '{bookingResult.ReasonCode}'.");
+                throw new RoomNotAvailableException($"Room number '{roomNumber}' could not be booked on '{bookingDate.ToShortDateString()}'. Reason code given was '{bookingResult.ReasonCode}'.");
         }
 
         public IEnumerable<int> getAvailableRooms(DateTime date)
         {
             return _bookingData.GetAvailableRooms(date);
-            // if(bookings == null || bookings.Count() == 0)
-            //     return null;
-            
-            // return bookings.Select(x => x.RoomNumber).ToList();
         }
     }
 }

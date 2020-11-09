@@ -90,6 +90,7 @@ namespace HotelBookingTests
         }
 
         [Fact]
+        [Trait("Category","Unit")]
         public void WhenRoomBookingExists_VerifyIsUnavailable()
         {
             // Mock data layer is configured to have a booking in room 201 on Saturdays
@@ -103,6 +104,7 @@ namespace HotelBookingTests
         }
 
         [Fact]
+        [Trait("Category","Unit")]
         public void WhenNoRoomBooking_VerifyIsAvailable()
         {
             // Mock data layer is configured not to have a room booking in 201 on Mondays
@@ -116,6 +118,7 @@ namespace HotelBookingTests
         }
 
         [Fact]
+        [Trait("Category","Unit")]
         public void WhenRoomBookingExists_NewBookingThrowsException()
         {
             // Mock data layer is configured to have a booking in room 201 on Saturdays
@@ -130,6 +133,7 @@ namespace HotelBookingTests
         }
 
         [Fact]
+        [Trait("Category","Unit")]
         public void WhenNoRoomBookingExists_NewBookingIsSuccessful()
         {
             // Mock data layer is configured to have no bookings in room 300 on Sundays
@@ -149,6 +153,7 @@ namespace HotelBookingTests
         [InlineData(DayOfWeek.Wednesday, 3)]
         [InlineData(DayOfWeek.Thursday, 2)]
         [InlineData(DayOfWeek.Friday, 1)]
+        [Trait("Category","Unit")]
         public void WhenRoomsAreAvailable_AvailabilityCheckReturnsCorrectRooms(DayOfWeek dayToCheckAvailability, int targetNumberOfRoomsAvailable)
         {
             // Instantiate code under test using mock data repo. 

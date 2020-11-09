@@ -15,7 +15,7 @@ To facilitate testing, the solution uses the following frameworks (added as loca
 
 There is a single master solution file, with references to 3 projects as follows:
 - **HotelBooking.sln**: The top level solution
-- **HotelBookingData/HotelBookingData.csproj**: Interfaces describing a simple data access layer. Note there are no concrete implementations within this project. It exists only to facilitate mocking of this data access layer as a dependency
+- **HotelBookingData/HotelBookingData.csproj**: Interfaces describing a simple data access layer. Note that this project contains interfaces to facilitate mocking of this data access layer as a dependency, as well as a concrete implementation using SqlLite as an in-memory database.
 - **HotelBookingDomain/HotelBookingDomain.csproj**: This is a class library project which contains the business logic for the hotel booking domain, most specifically within the BookingManager.cs class. This project has a dependency on the HotelBookingData project.
 - **HotelBookingTests/HotelBookingTests.csproj**: This project houses the Unit Tests which verify the behaviour of the business logic project. The tests project therefore has dependencies on both of the other projects
 

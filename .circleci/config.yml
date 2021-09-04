@@ -20,7 +20,7 @@ jobs:
       - run:
           name: Build solution
           command: |
-            dotnet build  
+            dotnet build --configuration Release
 
 workflows:
   test_and_build: 
